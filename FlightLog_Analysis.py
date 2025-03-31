@@ -9,6 +9,8 @@ from plotWindow import plotWindow
 
 from math import factorial
 
+# This code uses python 3.11.0
+
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     try:
         window_size = np.abs(int(window_size))
