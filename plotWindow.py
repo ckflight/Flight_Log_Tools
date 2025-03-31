@@ -25,8 +25,17 @@ class plotWindow():
         self.current_window = -1
         self.tabs = QTabWidget()
         self.MainWindow.setCentralWidget(self.tabs)
-        #self.MainWindow.resize(1280, 900)
-        #self.MainWindow.show()
+        
+                # Get screen size
+        screen = self.app.primaryScreen()
+        screen_size = screen.size()
+        screen_width = screen_size.width()
+        screen_height = screen_size.height()
+
+        # Set window size to 80% of screen size
+        self.MainWindow.resize(int(screen_width * 0.8), int(screen_height * 0.8))
+        
+        self.MainWindow.show()
 
         # opening window in maximized size
         #self.MainWindow.showMaximized() # shows with maximum frame size
