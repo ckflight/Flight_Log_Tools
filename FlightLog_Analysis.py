@@ -145,11 +145,11 @@ def StepResponse(SP, GY, lograte = 1, Ycorrection = 1.0):
 
     subsampleFactor = 1;
     if fileDurSec <= 20:
-        subsampleFactor = 20;
-    elif fileDurSec > 20 and fileDurSec <= 60:
         subsampleFactor = 10;
+    elif fileDurSec > 20 and fileDurSec <= 60:
+        subsampleFactor = 7;
     elif fileDurSec > 60:
-        subsampleFactor = 6;
+        subsampleFactor = 3;
 
     stepresponse = [];
     segment_vector = np.arange(start=1, stop=len(SP), step=round(segment_length / subsampleFactor))
@@ -831,7 +831,7 @@ if check_step_resp:
                     " DMAX: " + str(PDI_D_MAX_GAIN) +
                     " PPI: " + str(PDI_PITCH_PI_GAIN))
 
-            step_response_x, step_t_x = StepResponse2(rc_setpoint_roll, gyro_filtered_x, LOG_RATE)
+            step_response_x, step_t_x = StepResponse(rc_setpoint_roll, gyro_filtered_x, LOG_RATE)
             mean_step_x = np.mean(step_response_x, axis=0)
             mean_step_x = savitzky_golay(mean_step_x, window_order, 3)
             plotData(step_t_x, mean_step_x, "Step Response Roll", "", "", pid_parameters_roll_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
@@ -844,7 +844,7 @@ if check_step_resp:
                                        + " D:" + str(int(PID_PARAMETERS[1][2])) + " Dmin:" + str(int(PID_PARAMETERS[3][1])) \
                                        + " FF:" + str(int(PID_PARAMETERS[4][1]))
             ax = fig.add_subplot(3, 1, 2)
-            step_response_y, step_t_y = StepResponse2(rc_setpoint_pitch, gyro_filtered_y, LOG_RATE)
+            step_response_y, step_t_y = StepResponse(rc_setpoint_pitch, gyro_filtered_y, LOG_RATE)
             mean_step_y = np.mean(step_response_y, axis=0)
             mean_step_y = savitzky_golay(mean_step_y, window_order, 3)
             plotData(step_t_y, mean_step_y, "Step Response Pitch", "", "", pid_parameters_pitch_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
@@ -857,7 +857,7 @@ if check_step_resp:
                                         + " D:" + str(int(PID_PARAMETERS[2][2])) + " Dmin:" + str(int(PID_PARAMETERS[3][2])) \
                                        + " FF:" + str(int(PID_PARAMETERS[4][2]))
             ax = fig.add_subplot(3, 1, 3)
-            step_response_z, step_t_z = StepResponse2(rc_setpoint_yaw, gyro_filtered_z, LOG_RATE)
+            step_response_z, step_t_z = StepResponse(rc_setpoint_yaw, gyro_filtered_z, LOG_RATE)
             mean_step_z = np.mean(step_response_z, axis=0)
             mean_step_z = savitzky_golay(mean_step_z, window_order, 3)
             plotData(step_t_z, mean_step_z, "Step Response Yaw", "", "", pid_parameters_yaw_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
