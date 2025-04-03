@@ -80,7 +80,7 @@ def FFT_Calculate(array, SAMPLE_PERIOD):
 
     return freq, finalFFT, peakIndexes
 
-def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.7):
+def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
 
     minInput = 20
     segment_length = int(lograte * 2000)  # 2 sec segments
@@ -193,7 +193,7 @@ def plotData(x_axis_array, y_axis_array, plot_title: str, x_axis_title: str, y_a
         ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1], 2), minor = True)
 
     plt.plot(x_axis_array, y_axis_array, plot_type, label = legend_title)
-    plt.legend(loc="upper right")
+    plt.legend(loc="upper right", fontsize=22) 
 
 
 def plotFFTData(x_axis_array, y_axis_array, peak_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
@@ -785,7 +785,8 @@ if check_step_resp:
                     " IG: " + str(PID_I_GAIN) +
                     " DG: " + str(PID_D_GAIN) +
                     " DMAX: " + str(PDI_D_MAX_GAIN) +
-                    " PPI: " + str(PDI_PITCH_PI_GAIN))
+                    " PPI: " + str(PDI_PITCH_PI_GAIN),
+                    fontsize=24)
 
             step_response_x, step_t_x = StepResponse(rc_setpoint_roll, gyro_filtered_x, LOG_RATE)
             mean_step_x = np.mean(step_response_x, axis=0)
