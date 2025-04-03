@@ -80,66 +80,10 @@ def FFT_Calculate(array, SAMPLE_PERIOD):
 
     return freq, finalFFT, peakIndexes
 
-
-def StepResponse2(SP, GY, lograte=1, Ycorrection=True):
-    """
-    Computes the step response from quadcopter gyro data.
-
-    Parameters:
-    - SP: array-like, Setpoint signal
-    - GY: array-like, Gyro response signal
-    - lograte: float, Log rate in Hz (samples per second)
-    - Ycorrection: bool, Whether to correct steady-state response
-
-    Returns:
-    - step_response: Averaged step response over detected step events
-    - t: Time vector in milliseconds
-    """
-    min_input = 20  # Minimum step size to consider
-    segment_length = int(lograte * 3)  # 3-second segments
-    step_resp_duration_ms = 500  # Max step response duration (ms)
-    t = np.arange(0, step_resp_duration_ms, 1000 / lograte)  # Time vector in ms
-
-    # Identify step changes
-    step_indices = np.where(np.abs(np.diff(SP)) >= min_input)[0]
-
-    if len(step_indices) == 0:
-        return None, t  # No valid step response found
-
-    step_responses = []
-
-    for idx in step_indices:
-        start = max(0, idx)
-        end = min(len(GY), start + segment_length)
-
-        if end - start < len(t):  # Ensure enough data for response
-            continue
-
-        sp_segment = SP[start:end]
-        gy_segment = GY[start:end]
-
-        # Compute impulse response via deconvolution
-        h, _ = signal.deconvolve(gy_segment, sp_segment)
-        step_resp = np.cumsum(h[:len(t)])  # Integrate to get step response
-
-        if Ycorrection:
-            y_offset = 1 - np.mean(step_resp[int(len(t) * 0.4):])
-            step_resp *= (y_offset + 1)
-
-        step_responses.append(step_resp)
-
-    if not step_responses:
-        return None, t  # No valid responses
-
-    # Average step responses
-    step_response_avg = np.mean(step_responses, axis=0)
-
-    return step_response_avg, t
-
-def StepResponse(SP, GY, lograte = 1, Ycorrection = 1.0):
+def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.7):
 
     minInput = 20
-    segment_length = (lograte * 1000)  # 3 sec segments
+    segment_length = int(lograte * 2000)  # 2 sec segments
     wnd = (lograte * 1000) * .5  # 500ms step response function, length will depend on lograte
     StepRespDuration_ms =  500  # max dur of step resp in ms for plotting
     t = np.arange(start=0, stop=StepRespDuration_ms + (1 / lograte), step=(1 / lograte))  # % time in ms
@@ -204,6 +148,7 @@ def StepResponse(SP, GY, lograte = 1, Ycorrection = 1.0):
                 steadyStateWindow = np.where((t > 200) & (t < StepRespDuration_ms))
                 steadyStateResp = resptmp[i][steadyStateWindow]
 
+                '''
                 if Ycorrection:
                     if np.mean(steadyStateResp) < 1 or np.mean(steadyStateResp) > 1:
                         yoffset = 1 - np.mean(steadyStateResp);
@@ -211,6 +156,15 @@ def StepResponse(SP, GY, lograte = 1, Ycorrection = 1.0):
                         abc = 0
 
                     steadyStateResp = resptmp[i][steadyStateWindow]
+                '''
+                if Ycorrection:
+                    current_mean = np.mean(steadyStateResp)
+                    if current_mean != Ycorrection:  # Explicitly compare to Ycorrection
+                        yoffset = Ycorrection / current_mean  # Scale factor
+                        resptmp[i][:] = resptmp[i][:] * yoffset  # Apply scaling
+                        abc = 0
+
+                    steadyStateResp = resptmp[i][steadyStateWindow]  # Ensure it's updated correctly
 
                 # else:
 
@@ -478,7 +432,7 @@ SECTOR_SIZE = 512
 START_INDICATOR = ord('C')
 END_INDICATOR = ord('K')
 
-logFile = open("/Users/ck/Desktop/flight_log.txt", "rb")
+logFile = open("/home/ck/Desktop/flight_log1.txt", "rb")
 #logFile = open("flight_log.txt", "rb")
 
 currentTime     = 0
@@ -497,8 +451,8 @@ SAMPLE_PERIOD = (MAIN_LOOP_TIME * 0.000001)
 SAMPLE_FREQUENCY = 1 / SAMPLE_PERIOD
 TIME_INCREMENT = SAMPLE_PERIOD
 LOG_RATE = ((512 / BYTES_PER_LOG) * TOTAL_SECTORS) / FLIGHT_LOG_TIME
-if LOG_RATE < 1:
-    LOG_RATE = 1
+
+LOG_RATE = round(LOG_RATE, 1)
 
 print(PID_PARAMETERS)
 
@@ -809,9 +763,9 @@ pw = plotWindow()
 print("Plot qt window ended")
 if check_step_resp:
 
-    window_order = 7
+    window_order = 9
     ymin = 0
-    ymax = 1.75
+    ymax = 2.5
     for i in range(3):
 
         if i == 0:
