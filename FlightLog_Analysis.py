@@ -168,7 +168,7 @@ def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
 
                 # else:
 
-                if np.min(steadyStateResp) > 0.5 and np.max(steadyStateResp) < 3:  # Quality control
+                if np.min(steadyStateResp) > 0.4 and np.max(steadyStateResp) < 3:  # Quality control
                     j = j + 1
                     stepresponse.append(resptmp[i][0:int(1 + wnd)])
 
@@ -176,11 +176,9 @@ def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
 
 def plotData(x_axis_array, y_axis_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
 
-    plt.title(plot_title)
-    plt.xlabel(x_axis_title)
-    plt.ylabel(y_axis_title)
-    #plt.rc('axes', titlesize=8)  # fontsize of the axes title
-    #plt.rc('axes', labelsize=10)  # fontsize of the x and y labels
+    plt.title(plot_title, fontsize=22)
+    plt.xlabel(x_axis_title, fontsize=22)
+    plt.ylabel(y_axis_title, fontsize=22)
 
     if ylim1 != -1 and ylim2 != -1:
         plt.ylim(ylim1, ylim2)  # limit y axis between var1 and var2
@@ -198,9 +196,9 @@ def plotData(x_axis_array, y_axis_array, plot_title: str, x_axis_title: str, y_a
 
 def plotFFTData(x_axis_array, y_axis_array, peak_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
 
-    plt.title(plot_title)
-    plt.xlabel(x_axis_title)
-    plt.ylabel(y_axis_title)
+    plt.title(plot_title, fontsize=22)
+    plt.xlabel(x_axis_title, fontsize=22)
+    plt.ylabel(y_axis_title, fontsize=22)
 
     if ylim1 != -1 and ylim2 != -1:
         plt.ylim(ylim1, ylim2)  # limit y axis between var1 and var2
@@ -223,7 +221,7 @@ def plotFFTData(x_axis_array, y_axis_array, peak_array, plot_title: str, x_axis_
         # plt.plot(peaks_x_axis[i], 0.2, plot_type)
         plt.plot(peaks_axis[i], y_axis_array[i], plot_type)
 
-    plt.legend(loc="upper right")
+    plt.legend(loc="upper right", fontsize=22)
 
 
 # First sector is used to store information necessary to read file correctly
@@ -432,7 +430,7 @@ SECTOR_SIZE = 512
 START_INDICATOR = ord('C')
 END_INDICATOR = ord('K')
 
-logFile = open("/home/ck/Desktop/flight_log1.txt", "rb")
+logFile = open("/home/ck/Desktop/flight_log4.txt", "rb")
 #logFile = open("flight_log.txt", "rb")
 
 currentTime     = 0
