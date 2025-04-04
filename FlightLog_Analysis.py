@@ -174,25 +174,44 @@ def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
 
     return stepresponse, t
 
+def plotData2(x_axis_array, y_axis_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
+
+    plt.title(plot_title, fontsize=22)
+    plt.xlabel(x_axis_title, fontsize=22)
+    plt.ylabel(y_axis_title, fontsize=22)
+
+    if grid == 'major':
+        ax.grid(which=grid)  # Add lines to grid
+        ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1] + 50, 50))
+    elif grid == 'minor':
+        ax.grid(which=grid, linestyle = '--')  # Add lines to grid
+        ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1] + 50, 2), minor = True)
+
+    if ylim1 != -1 and ylim2 != -1:
+        ax.set_ylim(ylim1, ylim2)
+        ax.set_yticks(np.arange(ylim1, ylim2, 0.25))
+
+    plt.plot(x_axis_array, y_axis_array, plot_type, label = legend_title)
+    plt.legend(loc="upper right", fontsize=22) 
+
 def plotData(x_axis_array, y_axis_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
 
     plt.title(plot_title, fontsize=22)
     plt.xlabel(x_axis_title, fontsize=22)
     plt.ylabel(y_axis_title, fontsize=22)
 
-    if ylim1 != -1 and ylim2 != -1:
-        plt.ylim(ylim1, ylim2)  # limit y axis between var1 and var2
-
     if grid == 'major':
         ax.grid(which=grid)  # Add lines to grid
-        ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1], 20))
+        ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1], 50))
     elif grid == 'minor':
         ax.grid(which=grid, linestyle = '--')  # Add lines to grid
         ax.set_xticks(np.arange(0, x_axis_array[len(x_axis_array)-1], 2), minor = True)
 
+    if ylim1 != -1 and ylim2 != -1:
+        ax.set_ylim(ylim1, ylim2)
+
     plt.plot(x_axis_array, y_axis_array, plot_type, label = legend_title)
     plt.legend(loc="upper right", fontsize=22) 
-
 
 def plotFFTData(x_axis_array, y_axis_array, peak_array, plot_title: str, x_axis_title: str, y_axis_title: str, legend_title, plot_type: chr, ax, grid, ylim1=-1, ylim2=-1):
 
@@ -762,8 +781,8 @@ print("Plot qt window ended")
 if check_step_resp:
 
     window_order = 9
-    ymin = 0
-    ymax = 2.5
+    ymin = 0.25
+    ymax = 2.25
     for i in range(3):
 
         if i == 0:
@@ -789,7 +808,7 @@ if check_step_resp:
             step_response_x, step_t_x = StepResponse(rc_setpoint_roll, gyro_filtered_x, LOG_RATE)
             mean_step_x = np.mean(step_response_x, axis=0)
             mean_step_x = savitzky_golay(mean_step_x, window_order, 3)
-            plotData(step_t_x, mean_step_x, "Step Response Roll", "", "", pid_parameters_roll_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
+            plotData2(step_t_x, mean_step_x, "Step Response Roll", "", "", pid_parameters_roll_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
             #print(np.shape(step_t_x))
             print(np.shape(step_response_x))
             print(np.shape(mean_step_x))
@@ -802,7 +821,7 @@ if check_step_resp:
             step_response_y, step_t_y = StepResponse(rc_setpoint_pitch, gyro_filtered_y, LOG_RATE)
             mean_step_y = np.mean(step_response_y, axis=0)
             mean_step_y = savitzky_golay(mean_step_y, window_order, 3)
-            plotData(step_t_y, mean_step_y, "Step Response Pitch", "", "", pid_parameters_pitch_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
+            plotData2(step_t_y, mean_step_y, "Step Response Pitch", "", "", pid_parameters_pitch_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
             #print(np.shape(step_t_y))
             print(np.shape(step_response_y))
             print(np.shape(mean_step_y))
@@ -815,7 +834,7 @@ if check_step_resp:
             step_response_z, step_t_z = StepResponse(rc_setpoint_yaw, gyro_filtered_z, LOG_RATE)
             mean_step_z = np.mean(step_response_z, axis=0)
             mean_step_z = savitzky_golay(mean_step_z, window_order, 3)
-            plotData(step_t_z, mean_step_z, "Step Response Yaw", "", "", pid_parameters_yaw_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
+            plotData2(step_t_z, mean_step_z, "Step Response Yaw", "", "", pid_parameters_yaw_text, 'lime', ax, 'major',ylim1=ymin, ylim2=ymax)
             #print(np.shape(step_t_z))
             print(np.shape(step_response_z))
             print(np.shape(mean_step_z))
