@@ -33,13 +33,13 @@ class plotWindow():
         screen_height = screen_size.height()
 
         # Set window size to 80% of screen size
-        self.MainWindow.resize(int(screen_width * 0.8), int(screen_height * 0.8))
+        self.MainWindow.resize(int(screen_width * 0.6), int(screen_height * 0.4))
         
         self.MainWindow.show()
 
         # opening window in maximized size
         #self.MainWindow.showMaximized() # shows with maximum frame size
-        self.MainWindow.showFullScreen() # shows at full screen
+        #self.MainWindow.showFullScreen() # shows at full screen
 
     def addPlot(self, title, figure):
         new_tab = QWidget()
