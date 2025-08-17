@@ -929,7 +929,7 @@ for i in range(3):
     # FFT Plot
     ax = fig.add_subplot(2, 1, 2)
 
-    plotFFTData(freq_raw, fft_raw, peaksFFT_raw, "", "", "", "fft_raw", 'r+', ax, 'minor', 0, 2)
+    #plotFFTData(freq_raw, fft_raw, peaksFFT_raw, "", "", "", "fft_raw", 'r', ax, 'minor', 0, 2)
     plotFFTData(freq_preLPF, fft_preLPF, peaksFFT_preLPF, "", "", "", "fft_preLPF", 'deepskyblue', ax, 'minor', 0, 2)
     plotFFTData(freq_preNotch, fft_preNotch, peaksFFT_preNotch, "", "", "", "fft_preNotch", 'slateblue', ax, 'minor', 0, 2)
     plotFFTData(freq_filtered, fft_filtered, peaksFFT_filtered, "", "Frequency", "Amplitude", "fft_filtered", 'lime', ax, 'minor', 0, 2)
