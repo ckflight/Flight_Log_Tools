@@ -9,7 +9,13 @@ from plotWindow import plotWindow
 
 from math import factorial
 
-# This code uses python 3.11.0 - 11
+# This code is tested and corrected for python 3.13.3
+
+def combine_bytes_to_int16(MSB, LSB):
+    combined = (int(MSB) << 8) | int(LSB)
+    combined_uint16 = np.uint16(combined)   # Interpret bits as unsigned 16-bit
+    combined_int16 = combined_uint16.view(np.int16)  # Reinterpret bits as signed 16-bit
+    return combined_int16
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     try:
@@ -21,6 +27,8 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
+
+    y = np.array(y)
 
     order_range = range(order + 1)
 
@@ -159,6 +167,7 @@ def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
                 '''
                 if Ycorrection:
                     current_mean = np.mean(steadyStateResp)
+                    
                     if current_mean != Ycorrection:  # Explicitly compare to Ycorrection
                         yoffset = Ycorrection / current_mean  # Scale factor
                         resptmp[i][:] = resptmp[i][:] * yoffset  # Apply scaling
@@ -348,7 +357,7 @@ def Read_InfoSector():
 
         total_sectors = (np.uint32)((current1 << 24) | (current2 << 16) | (current3 << 8) | (current4))
 
-        # Total sectors written
+        # Log time written
         current1 = currentBytes_binary[204]
         current2 = currentBytes_binary[205]
         current3 = currentBytes_binary[206]
@@ -418,7 +427,6 @@ imu_y = []
 imu_z = []
 
 loop_cycle = []
-loop_time = []
 flags = []
 
 acc_filtered_x = []
@@ -449,7 +457,7 @@ SECTOR_SIZE = 512
 START_INDICATOR = ord('C')
 END_INDICATOR = ord('K')
 
-logFile = open("/home/ck/Desktop/flight_log4.txt", "rb")
+logFile = open("/home/ck/Desktop/flight_log.txt", "rb")
 #logFile = open("flight_log.txt", "rb")
 
 currentTime     = 0
@@ -527,40 +535,43 @@ while (True):
                 for axis in range(3):
 
                     byte_index += 1
-                    gyroRaw_MSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroRaw_MSB = currentBytes_binary[byte_index]
                     byte_index += 1
-                    gyroRaw_LSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroRaw_LSB = currentBytes_binary[byte_index]
 
-                    gyroRaw = np.int16(gyroRaw_MSB << 8 | gyroRaw_LSB)
-                    gyroRaw *= GYRO_SCALE
-
-                    byte_index += 1
-                    gyroFiltered_MSB = np.uint8(currentBytes_binary[byte_index])
-                    byte_index += 1
-                    gyroFiltered_LSB = np.uint8(currentBytes_binary[byte_index])
-
-                    gyroFiltered = np.int16(gyroFiltered_MSB << 8 | gyroFiltered_LSB)
+                    gyroRaw = combine_bytes_to_int16(gyroRaw_MSB, gyroRaw_LSB)
+                    gyroRaw_scaled = gyroRaw * GYRO_SCALE
 
                     byte_index += 1
-                    gyroPreLPF_MSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroFiltered_MSB = currentBytes_binary[byte_index]
                     byte_index += 1
-                    gyroPreLPF_LSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroFiltered_LSB = currentBytes_binary[byte_index]
 
-                    gyroPreLPF = np.int16(gyroPreLPF_MSB << 8 | gyroPreLPF_LSB)
-
-                    byte_index += 1
-                    gyroPreNotch_MSB = np.uint8(currentBytes_binary[byte_index])
-                    byte_index += 1
-                    gyroPreNotch_LSB = np.uint8(currentBytes_binary[byte_index])
-
-                    gyroPreNotch = np.int16(gyroPreNotch_MSB << 8 | gyroPreNotch_LSB)
+                    gyroFiltered = combine_bytes_to_int16(gyroFiltered_MSB, gyroFiltered_LSB)
 
                     byte_index += 1
-                    gyroZero_MSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroPreLPF_MSB = currentBytes_binary[byte_index]
                     byte_index += 1
-                    gyroZero_LSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroPreLPF_LSB = currentBytes_binary[byte_index]
 
-                    gyroZero = np.int16(gyroZero_MSB << 8 | gyroZero_LSB)
+                    gyroPreLPF = combine_bytes_to_int16(gyroPreLPF_MSB, gyroPreLPF_LSB)
+
+
+                    byte_index += 1
+                    gyroPreNotch_MSB = currentBytes_binary[byte_index]
+                    byte_index += 1
+                    gyroPreNotch_LSB = currentBytes_binary[byte_index]
+
+                    gyroPreNotch = combine_bytes_to_int16(gyroPreNotch_MSB, gyroPreNotch_LSB)
+
+
+                    byte_index += 1
+                    gyroZero_MSB = currentBytes_binary[byte_index]
+                    byte_index += 1
+                    gyroZero_LSB = currentBytes_binary[byte_index]
+
+                    gyroZero = combine_bytes_to_int16(gyroZero_MSB, gyroZero_LSB)
+
 
                     # add new data to arrays
                     if (axis == 0):
@@ -591,20 +602,22 @@ while (True):
                 for axis in range(4):
 
                     byte_index += 1
-                    rcData_MSB = np.uint8(currentBytes_binary[byte_index])
+                    rcData_MSB = currentBytes_binary[byte_index]
                     byte_index += 1
-                    rcData_LSB = np.uint8(currentBytes_binary[byte_index])
+                    rcData_LSB = currentBytes_binary[byte_index]
 
-                    rcData = np.uint16(rcData_MSB << 8 | rcData_LSB)
+                    rcData = combine_bytes_to_int16(rcData_MSB, rcData_LSB)
 
                     # No rc_setpoint for throttle
                     if axis != 3:
                         byte_index += 1
-                        rcSetpoint_MSB = np.uint8(currentBytes_binary[byte_index])
+                        rcSetpoint_MSB = currentBytes_binary[byte_index]
                         byte_index += 1
-                        rcSetpoint_LSB = np.uint8(currentBytes_binary[byte_index])
+                        rcSetpoint_LSB = currentBytes_binary[byte_index]
 
-                        rcSetpoint = np.int16(rcSetpoint_MSB << 8 | rcSetpoint_LSB)
+                        rcSetpoint = combine_bytes_to_int16(rcSetpoint_MSB, rcSetpoint_LSB)
+
+
 
                     if (axis == 0):
                         rc_data_roll.append(rcData)
@@ -624,6 +637,8 @@ while (True):
                     byte_index += 1
                     motorfinal = (np.uint8)(currentBytes_binary[byte_index])
 
+                    motorfinal = int(motorfinal)
+
                     if (esc == 0):
                         motor_final1.append(motorfinal * 10)
                     elif (esc == 1):
@@ -637,6 +652,8 @@ while (True):
                 for axis in range(3):
                     byte_index += 1
                     imu = np.uint8(currentBytes_binary[byte_index])
+
+                    imu = int(imu)
 
                     if (axis == 0):
                         imu_x.append(imu)
@@ -652,7 +669,6 @@ while (True):
                 loopCycle_LSB = np.uint8(currentBytes_binary[byte_index])
                 loopCycle = np.int16(loopCycle_MSB << 8 | loopCycle_LSB)
                 loop_cycle.append(loopCycle)
-                #loop_time.append()
 
                 # 2 bytes for flags later decode it
                 byte_index += 1
@@ -670,7 +686,8 @@ while (True):
                     byte_index += 1
                     accFiltered_LSB = np.uint8(currentBytes_binary[byte_index])
 
-                    accFiltered = np.int16(accFiltered_MSB << 8 | accFiltered_LSB)
+                    accFiltered = combine_bytes_to_int16(accFiltered_MSB, accFiltered_LSB)
+
 
                     if (axis == 0):
                         acc_filtered_x.append(accFiltered)  # add new data to array
@@ -852,6 +869,7 @@ for i in range(3):
     if i == 0:
         gyro_raw = np.subtract(gyro_raw_x,gyro_zero_x)
         gyro_raw = [x * GYRO_SIGN[i] for x in gyro_raw]
+
         gyro_preLPF = gyro_preLPF_x
         gyro_preNotch = gyro_preNotch_x
         gyro_filtered = gyro_filtered_x
@@ -895,10 +913,11 @@ for i in range(3):
     plotData(timeArray, rc_command_smooth, title, "", "", "rc_command", 'blue', ax, 'minor')
     plotData(timeArray, rc_setpoint_smooth, title, "", "", "rc_setpoint", 'red', ax, 'minor')
 
-    plotData(timeArray, gyro_raw_smooth, "", "", "", "gyro_raw", 'black', ax, 'minor')
+    #plotData(timeArray, gyro_raw_smooth, "", "", "", "gyro_raw", 'black', ax, 'minor')
     plotData(timeArray, gyro_preNotch_smooth, "", "", "", "(gyro_raw-offset)*scaled", 'magenta', ax, 'minor')
     plotData(timeArray, gyro_preLPF_smooth, "", "", "", "gyro+notch", 'cyan', ax, 'minor')
     plotData(timeArray, gyro_filtered_smooth, title, "Time (sec)", "Deg/sec", "gyro+notch+lpf", 'lime', ax, 'major')
+    
 
     # Calculate FFT
     freq_raw, fft_raw, peaksFFT_raw = FFT_Calculate(gyro_raw, SAMPLE_PERIOD)
@@ -909,7 +928,7 @@ for i in range(3):
     # FFT Plot
     ax = fig.add_subplot(2, 1, 2)
 
-    plotFFTData(freq_raw, fft_raw, peaksFFT_raw, "", "", "", "fft_raw", 'r+', ax, 'minor', 0, 2)
+    #plotFFTData(freq_raw, fft_raw, peaksFFT_raw, "", "", "", "fft_raw", 'r', ax, 'minor', 0, 2)
     plotFFTData(freq_preLPF, fft_preLPF, peaksFFT_preLPF, "", "", "", "fft_preLPF", 'deepskyblue', ax, 'minor', 0, 2)
     plotFFTData(freq_preNotch, fft_preNotch, peaksFFT_preNotch, "", "", "", "fft_preNotch", 'slateblue', ax, 'minor', 0, 2)
     plotFFTData(freq_filtered, fft_filtered, peaksFFT_filtered, "", "Frequency", "Amplitude", "fft_filtered", 'lime', ax, 'minor', 0, 2)
