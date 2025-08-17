@@ -22,6 +22,8 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
 
+    y = np.array(y)
+
     order_range = range(order + 1)
 
     half_window = (window_size - 1) // 2
@@ -159,6 +161,7 @@ def StepResponse(SP, GY, lograte = 1.0, Ycorrection = 1.75):
                 '''
                 if Ycorrection:
                     current_mean = np.mean(steadyStateResp)
+                    
                     if current_mean != Ycorrection:  # Explicitly compare to Ycorrection
                         yoffset = Ycorrection / current_mean  # Scale factor
                         resptmp[i][:] = resptmp[i][:] * yoffset  # Apply scaling
@@ -348,7 +351,7 @@ def Read_InfoSector():
 
         total_sectors = (np.uint32)((current1 << 24) | (current2 << 16) | (current3 << 8) | (current4))
 
-        # Total sectors written
+        # Log time written
         current1 = currentBytes_binary[204]
         current2 = currentBytes_binary[205]
         current3 = currentBytes_binary[206]
@@ -449,14 +452,14 @@ SECTOR_SIZE = 512
 START_INDICATOR = ord('C')
 END_INDICATOR = ord('K')
 
-logFile = open("/home/ck/Desktop/flight_log4.txt", "rb")
+logFile = open("/home/ck/Desktop/flight_log.txt", "rb")
 #logFile = open("flight_log.txt", "rb")
 
 currentTime     = 0
 sector_counter  = 0
 print_sector    = 0
 write_step_data = 0
-check_step_resp = 1
+check_step_resp = 0
 
 (TOTAL_SECTORS, LOG_OK, MAIN_LOOP_TIME, GYRO_SIGN, GYRO_SCALE, BYTES_PER_LOG, FIRMWARE_DETAILS,
  USE_LPF, LPF_CUTOFF, USE_NOTCH1, NOTCH1_MIN, NOTCH1_MAX, USE_NOTCH2, NOTCH2_MIN, NOTCH2_MAX,
@@ -527,40 +530,47 @@ while (True):
                 for axis in range(3):
 
                     byte_index += 1
-                    gyroRaw_MSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroRaw_MSB = currentBytes_binary[byte_index]
                     byte_index += 1
-                    gyroRaw_LSB = np.uint8(currentBytes_binary[byte_index])
+                    gyroRaw_LSB = currentBytes_binary[byte_index]
 
-                    gyroRaw = np.int16(gyroRaw_MSB << 8 | gyroRaw_LSB)
-                    gyroRaw *= GYRO_SCALE
+                    combined = np.uint16((gyroRaw_MSB << 8) | gyroRaw_LSB)
+                    gyroRaw = combined.view(np.int16)
+
+                    gyroRaw_scaled = gyroRaw * GYRO_SCALE
 
                     byte_index += 1
                     gyroFiltered_MSB = np.uint8(currentBytes_binary[byte_index])
                     byte_index += 1
                     gyroFiltered_LSB = np.uint8(currentBytes_binary[byte_index])
 
-                    gyroFiltered = np.int16(gyroFiltered_MSB << 8 | gyroFiltered_LSB)
+                    combined = np.uint16((gyroFiltered_MSB << 8) | gyroFiltered_LSB)
+                    gyroFiltered = combined.view(np.int16)
 
                     byte_index += 1
                     gyroPreLPF_MSB = np.uint8(currentBytes_binary[byte_index])
                     byte_index += 1
                     gyroPreLPF_LSB = np.uint8(currentBytes_binary[byte_index])
 
-                    gyroPreLPF = np.int16(gyroPreLPF_MSB << 8 | gyroPreLPF_LSB)
+                    combined = np.uint16((gyroPreLPF_MSB << 8) | gyroPreLPF_LSB)
+                    gyroPreLPF = combined.view(np.int16)
 
                     byte_index += 1
                     gyroPreNotch_MSB = np.uint8(currentBytes_binary[byte_index])
                     byte_index += 1
                     gyroPreNotch_LSB = np.uint8(currentBytes_binary[byte_index])
 
-                    gyroPreNotch = np.int16(gyroPreNotch_MSB << 8 | gyroPreNotch_LSB)
+                    combined = np.uint16((gyroPreNotch_MSB << 8) | gyroPreNotch_LSB)
+                    gyroPreNotch = combined.view(np.int16)
 
                     byte_index += 1
                     gyroZero_MSB = np.uint8(currentBytes_binary[byte_index])
                     byte_index += 1
                     gyroZero_LSB = np.uint8(currentBytes_binary[byte_index])
 
-                    gyroZero = np.int16(gyroZero_MSB << 8 | gyroZero_LSB)
+                    combined = np.uint16((gyroZero_MSB << 8) | gyroZero_LSB)
+                    gyroZero = combined.view(np.int16)
+
 
                     # add new data to arrays
                     if (axis == 0):
@@ -624,6 +634,8 @@ while (True):
                     byte_index += 1
                     motorfinal = (np.uint8)(currentBytes_binary[byte_index])
 
+                    motorfinal = int(motorfinal)
+
                     if (esc == 0):
                         motor_final1.append(motorfinal * 10)
                     elif (esc == 1):
@@ -637,6 +649,8 @@ while (True):
                 for axis in range(3):
                     byte_index += 1
                     imu = np.uint8(currentBytes_binary[byte_index])
+
+                    imu = int(imu)
 
                     if (axis == 0):
                         imu_x.append(imu)
@@ -855,7 +869,7 @@ for i in range(3):
         gyro_preLPF = gyro_preLPF_x
         gyro_preNotch = gyro_preNotch_x
         gyro_filtered = gyro_filtered_x
-        rc_command = [x - 1500 for x in rc_data_roll] # subtract 1500 from each value to get command
+        rc_command = [int(x) - 1500 for x in rc_data_roll] # subtract 1500 from each value to get command
         rc_setpoint = rc_setpoint_roll
         title = "Gyroscope X"
     elif i == 1:
@@ -864,7 +878,7 @@ for i in range(3):
         gyro_preLPF = gyro_preLPF_y
         gyro_preNotch = gyro_preNotch_y
         gyro_filtered = gyro_filtered_y
-        rc_command = [x - 1500 for x in rc_data_pitch]
+        rc_command = [int(x) - 1500 for x in rc_data_pitch]
         rc_setpoint = rc_setpoint_pitch
         title = "Gyroscope Y"
     elif i == 2:
@@ -873,7 +887,7 @@ for i in range(3):
         gyro_preLPF = gyro_preLPF_z
         gyro_preNotch = gyro_preNotch_z
         gyro_filtered = gyro_filtered_z
-        rc_command = [x - 1500 for x in rc_data_yaw]
+        rc_command = [int(x) - 1500 for x in rc_data_yaw]
         rc_setpoint = rc_setpoint_yaw
         title = "Gyroscope Z"
 
@@ -940,7 +954,7 @@ for i in range(0, 4):
     if i == 0:
         title = "RC Roll"
         ax = fig.add_subplot(5, 1, 1)
-        rc_command = [x - 1500 for x in rc_data_roll] # subtract 1500 from each value to get command
+        rc_command = [int(x) - 1500 for x in rc_data_roll] # subtract 1500 from each value to get command
         rc_setpoint = rc_setpoint_roll
         color1 = 'lightskyblue'
         color2 = 'blueviolet'
@@ -951,7 +965,7 @@ for i in range(0, 4):
     elif i == 1:
         title = "RC Pitch"
         ax = fig.add_subplot(5, 1, 2)
-        rc_command = [x - 1500 for x in rc_data_pitch]
+        rc_command = [int(x) - 1500 for x in rc_data_pitch]
         rc_setpoint = rc_setpoint_pitch
         color1 = 'c'
         color2 = 'g'
@@ -962,7 +976,7 @@ for i in range(0, 4):
     elif i == 2:
         title = "RC Yaw"
         ax = fig.add_subplot(5, 1, 3)
-        rc_command = [x - 1500 for x in rc_data_yaw]
+        rc_command = [int(x) - 1500 for x in rc_data_yaw]
         rc_setpoint = rc_setpoint_yaw
         color1 = 'springgreen'
         color2 = 'darkolivegreen'
