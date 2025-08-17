@@ -9,8 +9,7 @@ from plotWindow import plotWindow
 
 from math import factorial
 
-# This code uses python 3.11.0 - 11
-
+# This code is tested and corrected for python 3.13.3
 
 def combine_bytes_to_int16(MSB, LSB):
     combined = (int(MSB) << 8) | int(LSB)
@@ -465,7 +464,7 @@ currentTime     = 0
 sector_counter  = 0
 print_sector    = 0
 write_step_data = 0
-check_step_resp = 0
+check_step_resp = 1
 
 (TOTAL_SECTORS, LOG_OK, MAIN_LOOP_TIME, GYRO_SIGN, GYRO_SCALE, BYTES_PER_LOG, FIRMWARE_DETAILS,
  USE_LPF, LPF_CUTOFF, USE_NOTCH1, NOTCH1_MIN, NOTCH1_MAX, USE_NOTCH2, NOTCH2_MIN, NOTCH2_MAX,
